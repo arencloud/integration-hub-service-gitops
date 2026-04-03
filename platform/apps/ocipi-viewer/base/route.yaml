@@ -1,0 +1,17 @@
+# Managed Manifest
+# File: platform/apps/ocipi-viewer/base/route.yaml
+# Purpose: Base application manifest defining deployable workload resources.
+# Owner: integration-hub platform team
+
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: ocipi-viewer
+spec:
+  to:
+    kind: Service
+    name: ocipi-viewer
+  port:
+    targetPort: http
+  tls:
+    termination: edge

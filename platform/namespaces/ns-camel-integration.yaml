@@ -1,0 +1,11 @@
+# Managed Manifest
+# File: platform/namespaces/ns-camel-integration.yaml
+# Purpose: Namespace and access bootstrap resources for workload and platform segregation.
+# Owner: integration-hub platform team
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: camel-integration-ns
+  labels:
+    argocd.argoproj.io/managed-by: openshift-gitops

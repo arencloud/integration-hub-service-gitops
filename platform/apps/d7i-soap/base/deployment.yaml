@@ -1,0 +1,44 @@
+# Managed Manifest
+# File: platform/apps/d7i-soap/base/deployment.yaml
+# Purpose: Base application manifest defining deployable workload resources.
+# Owner: integration-hub platform team
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: d7i-soap-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: d7i-soap-service
+  template:
+    metadata:
+      labels:
+        app: d7i-soap-service
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: d7i-soap-service
+          image: quay.io/rh-ee-egevorky/d7i-soap-service:latest
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - containerPort: 8082
+          env:
+            - name: D7I_BASIC_USER
+              valueFrom:
+                secretKeyRef:
+                  name: d7i-soap-runtime
+                  key: D7I_BASIC_USER
+            - name: D7I_BASIC_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: d7i-soap-runtime
+                  key: D7I_BASIC_PASS

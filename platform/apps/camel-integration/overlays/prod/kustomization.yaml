@@ -1,0 +1,10 @@
+# Managed Manifest
+# File: platform/apps/camel-integration/overlays/prod/kustomization.yaml
+# Purpose: Environment overlay customizing base application resources for target environment.
+# Owner: integration-hub platform team
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: camel-integration-ns
+resources:
+  - ../../base

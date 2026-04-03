@@ -1,0 +1,9 @@
+# Managed Manifest
+# File: platform/namespaces/ns-gitops.yaml
+# Purpose: Namespace and access bootstrap resources for workload and platform segregation.
+# Owner: integration-hub platform team
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-gitops

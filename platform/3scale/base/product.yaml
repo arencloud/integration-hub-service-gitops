@@ -1,0 +1,27 @@
+# Managed Manifest
+# File: platform/3scale/base/product.yaml
+# Purpose: 3scale product/back-end/API management resources used for integration API onboarding.
+# Owner: integration-hub platform team
+
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Product
+metadata:
+  name: integration-hub-product
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  name: Integration Hub Product
+  systemName: integration-hub-product
+  providerAccountRef:
+    name: 3scale-provider-account
+  deployment:
+    apicastHosted:
+      authentication:
+        oidc:
+          issuerType: keycloak
+          issuerEndpoint: https://rhbk-dev.apps.cl01.arencloud.com/realms/platform-dev
+          jwtClaimWithClientID: azp
+          jwtClaimWithClientIDType: plain
+  backendUsages:
+    integration-hub-backend:
+      path: /

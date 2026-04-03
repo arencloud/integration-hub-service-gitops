@@ -1,0 +1,36 @@
+# Managed Manifest
+# File: platform/tekton/base/tasks/task-acs-scan.yaml
+# Purpose: Reusable Tekton Task implementing a CI/CD step for build, test, scan, or GitOps operations.
+# Owner: integration-hub platform team
+
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: task-acs-scan
+spec:
+  params:
+    - name: image-repo
+    - name: image-tag
+    - name: rox-endpoint
+      description: "ACS Central endpoint, e.g. central-stackrox.apps.cluster.example.com:443"
+    - name: insecure-skip-tls-verify
+      default: "false"
+  steps:
+    - name: scan
+      image: quay.io/stackrox-io/roxctl:4.7.3
+      env:
+        - name: ROX_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: rox-api-token
+              key: token
+      script: |
+        set -eux
+        image="$(params.image-repo):$(params.image-tag)"
+        insecure=""
+        if [ "$(params.insecure-skip-tls-verify)" = "true" ]; then
+          insecure="--insecure-skip-tls-verify"
+        fi
+        roxctl image check $insecure \
+          --endpoint "$(params.rox-endpoint)" \
+          --image "$image"

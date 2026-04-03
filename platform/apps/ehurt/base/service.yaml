@@ -1,0 +1,16 @@
+# Managed Manifest
+# File: platform/apps/ehurt/base/service.yaml
+# Purpose: Base application manifest defining deployable workload resources.
+# Owner: integration-hub platform team
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: ehurt-service
+spec:
+  selector:
+    app: ehurt-service
+  ports:
+    - port: 8083
+      targetPort: 8083
+      name: http

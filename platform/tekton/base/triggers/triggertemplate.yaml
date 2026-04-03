@@ -1,0 +1,83 @@
+# Managed Manifest
+# File: platform/tekton/base/triggers/triggertemplate.yaml
+# Purpose: Tekton Triggers configuration mapping webhook events to parameterized PipelineRuns.
+# Owner: integration-hub platform team
+
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: app-ci-cd-template
+spec:
+  params:
+    - name: gitrevision
+    - name: gitrepositoryurl
+    - name: gitops-repo-url
+      default: https://github.com/arencloud/integration-hub-service-gitops.git
+    - name: context-dir
+    - name: image-repo
+    - name: image-tag
+      default: ""
+    - name: app-version
+      default: ""
+    - name: kustomization-path
+    - name: scanner-type
+      default: trivy
+    - name: trivy-severity
+      default: CRITICAL
+    - name: rox-endpoint
+      default: ""
+    - name: rox-insecure-skip-tls-verify
+      default: "false"
+    - name: enable-3scale-onboarding
+      default: "false"
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1
+      kind: PipelineRun
+      metadata:
+        generateName: app-ci-cd-
+      spec:
+        taskRunTemplate:
+          serviceAccountName: app-ci-bot
+        pipelineRef:
+          name: app-ci-cd-pipeline
+        workspaces:
+          - name: source
+            volumeClaimTemplate:
+              spec:
+                accessModes: ["ReadWriteOnce"]
+                resources:
+                  requests:
+                    storage: 2Gi
+          - name: dockerconfig
+            secret:
+              secretName: registry-auth-secret
+          - name: maven-server-secret
+            secret:
+              secretName: maven-repo-credentials
+        params:
+          - name: repo-url
+            value: $(tt.params.gitrepositoryurl)
+          - name: gitops-repo-url
+            value: $(tt.params.gitops-repo-url)
+          - name: revision
+            value: $(tt.params.gitrevision)
+          - name: context-dir
+            value: $(tt.params.context-dir)
+          - name: image-repo
+            value: $(tt.params.image-repo)
+          - name: image-tag
+            value: $(tt.params.image-tag)
+          - name: app-version
+            value: $(tt.params.app-version)
+          - name: kustomization-path
+            value: $(tt.params.kustomization-path)
+          - name: scanner-type
+            value: $(tt.params.scanner-type)
+          - name: trivy-severity
+            value: $(tt.params.trivy-severity)
+          - name: rox-endpoint
+            value: $(tt.params.rox-endpoint)
+          - name: rox-insecure-skip-tls-verify
+            value: $(tt.params.rox-insecure-skip-tls-verify)
+          - name: enable-3scale-onboarding
+            value: $(tt.params.enable-3scale-onboarding)

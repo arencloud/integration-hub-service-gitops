@@ -1,0 +1,48 @@
+# Managed Manifest
+# File: platform/tekton/base/tasks/task-prepare-maven-settings.yaml
+# Purpose: Reusable Tekton Task implementing a CI/CD step for build, test, scan, or GitOps operations.
+# Owner: integration-hub platform team
+
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: task-prepare-maven-settings
+spec:
+  params:
+    - name: context-dir
+  workspaces:
+    - name: source
+    - name: maven-server-secret
+  steps:
+    - name: render-settings
+      image: registry.redhat.io/ubi9/python-312-minimal:latest
+      env:
+        - name: CONTEXT_DIR
+          value: $(params.context-dir)
+        - name: SOURCE_WS
+          value: $(workspaces.source.path)
+        - name: SECRET_WS
+          value: $(workspaces.maven-server-secret.path)
+      script: |
+        set -eu
+        python3 - <<'PY'
+        import os
+        from pathlib import Path
+
+        source_ws = Path(os.environ["SOURCE_WS"])
+        secret_ws = Path(os.environ["SECRET_WS"])
+        context_dir = os.environ["CONTEXT_DIR"]
+
+        username = (secret_ws / "username").read_text(encoding="utf-8").strip()
+        password = (secret_ws / "password").read_text(encoding="utf-8").strip()
+
+        app_mvn_dir = source_ws / "repo" / context_dir / ".mvn"
+        src = app_mvn_dir / "settings.xml"
+        dst = app_mvn_dir / "settings.generated.xml"
+
+        text = src.read_text(encoding="utf-8")
+        text = text.replace("${env.ARENCLOUD_MAVEN_USERNAME}", username)
+        text = text.replace("${env.ARENCLOUD_MAVEN_PASSWORD}", password)
+        dst.write_text(text, encoding="utf-8")
+        os.chmod(dst, 0o600)
+        PY

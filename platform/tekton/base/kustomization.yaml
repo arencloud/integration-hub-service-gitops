@@ -1,0 +1,28 @@
+# Managed Manifest
+# File: platform/tekton/base/kustomization.yaml
+# Purpose: Kustomize entrypoint assembling Tekton base resources for CI/CD namespace.
+# Owner: integration-hub platform team
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - rbac/serviceaccount.yaml
+  - rbac/role.yaml
+  - rbac/rolebinding.yaml
+  - rbac/rolebinding-triggers.yaml
+  - rbac/clusterrolebinding-triggers.yaml
+  - tasks/task-git-clone.yaml
+  - tasks/task-resolve-app-version.yaml
+  - tasks/task-prepare-maven-settings.yaml
+  - tasks/task-maven-test.yaml
+  - tasks/task-maven-package.yaml
+  - tasks/task-buildah-push.yaml
+  - tasks/task-trivy-scan.yaml
+  - tasks/task-acs-scan.yaml
+  - tasks/task-update-kustomize-image.yaml
+  - tasks/task-3scale-onboard.yaml
+  - pipelines/pipeline-app-ci-cd.yaml
+  - triggers/triggerbinding.yaml
+  - triggers/triggertemplate.yaml
+  - triggers/eventlistener.yaml
+  - triggers/eventlistener-route.yaml

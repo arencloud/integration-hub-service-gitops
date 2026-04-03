@@ -1,0 +1,16 @@
+# Managed Manifest
+# File: platform/apps/ocipi-viewer/base/service.yaml
+# Purpose: Base application manifest defining deployable workload resources.
+# Owner: integration-hub platform team
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: ocipi-viewer
+spec:
+  selector:
+    app: ocipi-viewer
+  ports:
+    - port: 8084
+      targetPort: 8084
+      name: http

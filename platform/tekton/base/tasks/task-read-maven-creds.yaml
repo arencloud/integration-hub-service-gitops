@@ -1,0 +1,51 @@
+# Managed Manifest
+# File: platform/tekton/base/tasks/task-read-maven-creds.yaml
+# Purpose: Reusable Tekton Task implementing a CI/CD step for build, test, scan, or GitOps operations.
+# Owner: integration-hub platform team
+
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: task-read-maven-creds
+spec:
+  workspaces:
+    - name: maven-server-secret
+  results:
+    - name: username
+      description: Maven repository username
+    - name: password
+      description: Maven repository password
+    - name: username-url
+      description: URL-encoded Maven repository username
+    - name: password-url
+      description: URL-encoded Maven repository password
+  steps:
+    - name: read
+      image: registry.redhat.io/ubi9/python-312-minimal:latest
+      script: |
+        set -eu
+        ufile="$(workspaces.maven-server-secret.path)/username"
+        pfile="$(workspaces.maven-server-secret.path)/password"
+        test -f "$ufile"
+        test -f "$pfile"
+        tr -d '\n' < "$ufile" > "$(results.username.path)"
+        tr -d '\n' < "$pfile" > "$(results.password.path)"
+        python3 - <<'PY'
+        import os
+        import urllib.parse
+        from pathlib import Path
+
+        u = Path(os.environ["UFILE"]).read_text().strip()
+        p = Path(os.environ["PFILE"]).read_text().strip()
+        Path(os.environ["UURL"]).write_text(urllib.parse.quote(u, safe=""))
+        Path(os.environ["PURL"]).write_text(urllib.parse.quote(p, safe=""))
+        PY
+      env:
+        - name: UFILE
+          value: $(workspaces.maven-server-secret.path)/username
+        - name: PFILE
+          value: $(workspaces.maven-server-secret.path)/password
+        - name: UURL
+          value: $(results.username-url.path)
+        - name: PURL
+          value: $(results.password-url.path)

@@ -1,0 +1,45 @@
+# Managed Manifest
+# File: platform/tekton/base/tasks/task-buildah-push.yaml
+# Purpose: Reusable Tekton Task implementing a CI/CD step for build, test, scan, or GitOps operations.
+# Owner: integration-hub platform team
+
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: task-buildah-push
+spec:
+  params:
+    - name: context-dir
+    - name: image-repo
+    - name: image-tag
+  workspaces:
+    - name: source
+    - name: dockerconfig
+      optional: true
+  steps:
+    - name: maven-package
+      image: registry.redhat.io/ubi10/openjdk-25:latest
+      script: |
+        set -eu
+        cd $(workspaces.source.path)/repo/$(params.context-dir)
+        if ! command -v mvn >/dev/null 2>&1; then
+          microdnf install -y maven
+          microdnf clean all
+        fi
+        SETTINGS_FILE="$(pwd)/.mvn/settings.generated.xml"
+        test -f "${SETTINGS_FILE}"
+        mvn -q -s "${SETTINGS_FILE}" -f pom.xml -DskipTests package
+    - name: build-push
+      image: registry.redhat.io/rhel9/buildah:latest
+      securityContext:
+        privileged: true
+      script: |
+        set -eu
+        if [ "$(workspaces.dockerconfig.bound)" = "true" ] && [ -f "$(workspaces.dockerconfig.path)/config.json" ]; then
+          mkdir -p "${HOME}/.docker"
+          cp "$(workspaces.dockerconfig.path)/config.json" "${HOME}/.docker/config.json"
+          chmod 600 "${HOME}/.docker/config.json"
+        fi
+        cd $(workspaces.source.path)/repo/$(params.context-dir)
+        buildah bud --tls-verify=true -t $(params.image-repo):$(params.image-tag) .
+        buildah push --tls-verify=true $(params.image-repo):$(params.image-tag)

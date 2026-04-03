@@ -1,0 +1,60 @@
+# Managed Manifest
+# File: platform/tekton/base/triggers/eventlistener.yaml
+# Purpose: Tekton Triggers configuration mapping webhook events to parameterized PipelineRuns.
+# Owner: integration-hub platform team
+
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: app-ci-cd-listener
+spec:
+  serviceAccountName: app-ci-bot
+  triggers:
+    - name: integration-hub-trigger
+      bindings:
+        - ref: app-ci-cd-binding
+        - ref: app-ci-cd-static-binding-integration-hub
+      template:
+        ref: app-ci-cd-template
+      interceptors:
+        - ref:
+            name: cel
+          params:
+            - name: filter
+              value: "body.ref.startsWith('refs/heads/')"
+    - name: d7i-trigger
+      bindings:
+        - ref: app-ci-cd-binding
+        - ref: app-ci-cd-static-binding-d7i
+      template:
+        ref: app-ci-cd-template
+      interceptors:
+        - ref:
+            name: cel
+          params:
+            - name: filter
+              value: "body.ref.startsWith('refs/heads/')"
+    - name: ehurt-trigger
+      bindings:
+        - ref: app-ci-cd-binding
+        - ref: app-ci-cd-static-binding-ehurt
+      template:
+        ref: app-ci-cd-template
+      interceptors:
+        - ref:
+            name: cel
+          params:
+            - name: filter
+              value: "body.ref.startsWith('refs/heads/')"
+    - name: ocipi-trigger
+      bindings:
+        - ref: app-ci-cd-binding
+        - ref: app-ci-cd-static-binding-ocipi
+      template:
+        ref: app-ci-cd-template
+      interceptors:
+        - ref:
+            name: cel
+          params:
+            - name: filter
+              value: "body.ref.startsWith('refs/heads/')"

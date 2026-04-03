@@ -1,0 +1,17 @@
+# Managed Manifest
+# File: platform/apps/ehurt/base/route.yaml
+# Purpose: Base application manifest defining deployable workload resources.
+# Owner: integration-hub platform team
+
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: ehurt-service
+spec:
+  to:
+    kind: Service
+    name: ehurt-service
+  port:
+    targetPort: http
+  tls:
+    termination: edge

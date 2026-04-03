@@ -1,0 +1,25 @@
+# Managed Manifest
+# File: platform/gitops/root-application.yaml
+# Purpose: Root Argo CD application bootstrapping the app-of-apps GitOps pattern.
+# Owner: integration-hub platform team
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: integration-hub-platform-root
+  namespace: openshift-gitops
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/arencloud/integration-hub-service-gitops.git
+    targetRevision: main
+    path: platform/gitops/apps
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: openshift-gitops
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

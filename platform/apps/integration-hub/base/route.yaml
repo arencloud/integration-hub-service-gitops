@@ -1,0 +1,17 @@
+# Managed Manifest
+# File: platform/apps/integration-hub/base/route.yaml
+# Purpose: Base application manifest defining deployable workload resources.
+# Owner: integration-hub platform team
+
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: integration-hub
+spec:
+  to:
+    kind: Service
+    name: integration-hub
+  port:
+    targetPort: http
+  tls:
+    termination: edge

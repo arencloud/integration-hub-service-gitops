@@ -1,0 +1,9 @@
+# Managed Manifest
+# File: platform/gitops/kustomization.yaml
+# Purpose: Kustomize entrypoint for GitOps application manifests.
+# Owner: integration-hub platform team
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - root-application.yaml

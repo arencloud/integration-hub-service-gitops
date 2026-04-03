@@ -1,0 +1,23 @@
+# Managed Manifest
+# File: platform/gitops/apps/integration-hub.yaml
+# Purpose: Argo CD child application defining sync source and destination for a platform component.
+# Owner: integration-hub platform team
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: integration-hub-app
+  namespace: openshift-gitops
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/arencloud/integration-hub-service-gitops.git
+    targetRevision: main
+    path: platform/apps/integration-hub/overlays/prod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: integration-hub-ns
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

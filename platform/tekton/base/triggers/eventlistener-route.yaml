@@ -1,0 +1,18 @@
+# Managed Manifest
+# File: platform/tekton/base/triggers/eventlistener-route.yaml
+# Purpose: Tekton Triggers configuration mapping webhook events to parameterized PipelineRuns.
+# Owner: integration-hub platform team
+
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: el-app-ci-cd-listener
+spec:
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  to:
+    kind: Service
+    name: el-app-ci-cd-listener
+  port:
+    targetPort: http-listener

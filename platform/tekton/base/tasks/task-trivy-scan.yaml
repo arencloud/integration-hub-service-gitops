@@ -1,0 +1,44 @@
+# Managed Manifest
+# File: platform/tekton/base/tasks/task-trivy-scan.yaml
+# Purpose: Reusable Tekton Task implementing a CI/CD step for build, test, scan, or GitOps operations.
+# Owner: integration-hub platform team
+
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: task-trivy-scan
+spec:
+  params:
+    - name: image-repo
+    - name: image-tag
+    - name: context-dir
+    - name: severity
+      default: CRITICAL
+    - name: ignore-file
+      default: .trivyignore
+    - name: timeout
+      default: 20m
+  workspaces:
+    - name: source
+  steps:
+    - name: scan
+      image: docker.io/aquasec/trivy:0.55.2
+      script: |
+        set -eu
+        IMAGE_REF="$(params.image-repo):$(params.image-tag)"
+        IGNORE_PATH="$(workspaces.source.path)/repo/$(params.context-dir)/$(params.ignore-file)"
+
+        IGNORE_ARG=""
+        if [ -f "${IGNORE_PATH}" ]; then
+          IGNORE_ARG="--ignorefile ${IGNORE_PATH}"
+        fi
+
+        trivy image \
+          --scanners vuln \
+          --exit-code 1 \
+          --severity "$(params.severity)" \
+          --ignore-unfixed \
+          --ignore-status fixed \
+          --timeout "$(params.timeout)" \
+          ${IGNORE_ARG} \
+          "${IMAGE_REF}"

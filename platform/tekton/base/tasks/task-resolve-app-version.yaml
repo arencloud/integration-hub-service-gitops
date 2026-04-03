@@ -1,0 +1,69 @@
+# Managed Manifest
+# File: platform/tekton/base/tasks/task-resolve-app-version.yaml
+# Purpose: Reusable Tekton Task implementing a CI/CD step for build, test, scan, or GitOps operations.
+# Owner: integration-hub platform team
+
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: task-resolve-app-version
+spec:
+  params:
+    - name: context-dir
+    - name: image-tag
+      default: ""
+    - name: app-version
+      default: ""
+  workspaces:
+    - name: source
+  results:
+    - name: app-version
+      description: Resolved application version from pom.xml or explicit override.
+    - name: image-tag
+      description: Final image tag aligned with app version.
+  steps:
+    - name: resolve
+      image: registry.access.redhat.com/ubi9/toolbox:latest
+      script: |
+        set -eu
+        repo_root="$(workspaces.source.path)/repo"
+        pom_file="${repo_root}/$(params.context-dir)/pom.xml"
+
+        if [ ! -f "${pom_file}" ]; then
+          echo "pom.xml not found: ${pom_file}" >&2
+          exit 1
+        fi
+
+        resolved_version="$(params.app-version)"
+        if [ -z "${resolved_version}" ]; then
+          resolved_version="$(awk '
+            /<project[[:space:]>]/ { in_project=1 }
+            in_project && /<parent>/ { in_parent=1 }
+            in_parent && /<\/parent>/ { in_parent=0; next }
+            in_project && !in_parent && match($0, /<version>[^<]+<\/version>/) {
+              v=substr($0, RSTART+9, RLENGTH-19);
+              print v;
+              exit
+            }
+          ' "${pom_file}")"
+        fi
+
+        if [ -z "${resolved_version}" ]; then
+          echo "Unable to resolve project version from ${pom_file}" >&2
+          exit 1
+        fi
+
+        git config --global --add safe.directory "${repo_root}"
+        short_sha="$(git -C "${repo_root}" rev-parse --short=12 HEAD)"
+        computed_tag="$(printf '%s' "${resolved_version}" \
+          | tr '[:upper:]' '[:lower:]' \
+          | sed -E 's/[^a-z0-9._-]+/-/g; s/^-+//; s/-+$//')-${short_sha}"
+        final_tag="$(params.image-tag)"
+        if [ -z "${final_tag}" ]; then
+          final_tag="${computed_tag}"
+        fi
+
+        printf '%s' "${resolved_version}" > "$(results.app-version.path)"
+        printf '%s' "${final_tag}" > "$(results.image-tag.path)"
+        echo "Resolved app-version=${resolved_version}"
+        echo "Resolved image-tag=${final_tag}"

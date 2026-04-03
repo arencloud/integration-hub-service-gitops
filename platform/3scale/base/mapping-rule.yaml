@@ -1,0 +1,18 @@
+# Managed Manifest
+# File: platform/3scale/base/mapping-rule.yaml
+# Purpose: 3scale product/back-end/API management resources used for integration API onboarding.
+# Owner: integration-hub platform team
+
+apiVersion: capabilities.3scale.net/v1beta1
+kind: MappingRule
+metadata:
+  name: integration-hub-mapping-rule
+spec:
+  systemName: integration-hub-mapping-rule
+  metricMethodRef: hits
+  pattern: "/api/integration"
+  httpMethod: GET
+  increment: 1
+  productSystemName: integration-hub-product
+  providerAccountRef:
+    name: 3scale-provider-account

@@ -1,0 +1,30 @@
+# Managed Manifest
+# File: platform/tekton/base/tasks/task-maven-package.yaml
+# Purpose: Reusable Tekton Task implementing a CI/CD step for build, test, scan, or GitOps operations.
+# Owner: integration-hub platform team
+
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: task-maven-package
+spec:
+  params:
+    - name: context-dir
+  workspaces:
+    - name: source
+  steps:
+    - name: maven-package
+      image: registry.redhat.io/ubi10/openjdk-25:latest
+      script: |
+        set -eu
+        cd $(workspaces.source.path)/repo/$(params.context-dir)
+        if ! command -v mvn >/dev/null 2>&1; then
+          microdnf install -y maven
+          microdnf clean all
+        fi
+        SETTINGS_FILE="$(pwd)/.mvn/settings.generated.xml"
+        test -f "${SETTINGS_FILE}"
+        mvn -q -s "${SETTINGS_FILE}" -f pom.xml \
+          -DskipTests \
+          -Dquarkus.package.jar.type=fast-jar \
+          package

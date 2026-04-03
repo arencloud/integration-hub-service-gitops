@@ -1,0 +1,18 @@
+# Managed Manifest
+# File: platform/namespaces/rb-argocd-integration-hub.yaml
+# Purpose: Namespace and access bootstrap resources for workload and platform segregation.
+# Owner: integration-hub platform team
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: openshift-gitops-argocd-admin
+  namespace: integration-hub-ns
+subjects:
+  - kind: ServiceAccount
+    name: openshift-gitops-argocd-application-controller
+    namespace: openshift-gitops
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: admin

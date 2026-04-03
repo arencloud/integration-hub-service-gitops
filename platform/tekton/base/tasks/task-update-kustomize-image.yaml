@@ -1,0 +1,118 @@
+# Managed Manifest
+# File: platform/tekton/base/tasks/task-update-kustomize-image.yaml
+# Purpose: Reusable Tekton Task implementing a CI/CD step for build, test, scan, or GitOps operations.
+# Owner: integration-hub platform team
+
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: task-update-kustomize-image
+spec:
+  params:
+    - name: repo-url
+    - name: context-dir
+    - name: image-repo
+    - name: image-tag
+    - name: git-email
+      default: ci-bot@example.com
+    - name: git-name
+      default: ci-bot
+    - name: revision
+      default: main
+    - name: kustomization-path
+  workspaces:
+    - name: source
+  steps:
+    - name: update-image-tag
+      image: registry.access.redhat.com/ubi9/toolbox:latest
+      env:
+        - name: GIT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: gitops-push-secret
+              key: username
+              optional: true
+        - name: GIT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: gitops-push-secret
+              key: password
+              optional: true
+      script: |
+        set -eu
+        if ! command -v git >/dev/null 2>&1; then
+          microdnf install -y git
+          microdnf clean all
+        fi
+        repo_dir="$(workspaces.source.path)/repo-gitops"
+        rm -rf "${repo_dir}"
+        mkdir -p "${repo_dir}"
+        cd "${repo_dir}"
+        git config --global --add safe.directory "$(pwd)"
+        branch="$(params.revision)"
+        case "${branch}" in
+          refs/heads/*) branch="${branch#refs/heads/}" ;;
+        esac
+        if [ -z "${branch}" ]; then
+          branch="main"
+        fi
+        git init
+        git remote add origin "$(params.repo-url)"
+        git fetch --depth=1 origin "${branch}"
+        git checkout -B "${branch}" FETCH_HEAD
+        file="$(params.kustomization-path)/kustomization.yaml"
+        awk -v image="$(params.image-repo)" -v tag="$(params.image-tag)" '
+          BEGIN { found = 0 }
+          $0 ~ "name:[[:space:]]*" image "$" {
+            found = 1
+            print
+            if (getline) {
+              if ($0 ~ /^[[:space:]]*newTag:[[:space:]]*/) {
+                sub(/newTag:[[:space:]]*.*/, "newTag: " tag)
+              }
+              print
+              next
+            }
+          }
+          { print }
+          END {
+            if (!found) {
+              exit 10
+            }
+          }
+        ' "$file" > "$file.tmp"
+        awk_rc=$?
+        if [ "$awk_rc" -eq 10 ]; then
+          echo "Image entry not found in ${file}: $(params.image-repo)" >&2
+          rm -f "$file.tmp"
+          exit 1
+        fi
+        mv "$file.tmp" "$file"
+
+        git config user.email "$(params.git-email)"
+        git config user.name "$(params.git-name)"
+        git add "$file"
+        if git diff --staged --quiet; then
+          echo "No image tag change detected"
+          exit 0
+        fi
+        git commit -m "ci: update $(params.context-dir) image to $(params.image-tag)"
+        if [ -n "${GIT_USERNAME:-}" ] && [ -n "${GIT_PASSWORD:-}" ]; then
+          origin_url="$(git remote get-url origin)"
+          case "${origin_url}" in
+            https://*)
+              git remote set-url origin "https://${GIT_USERNAME}:${GIT_PASSWORD}@${origin_url#https://}"
+              ;;
+          esac
+        fi
+        for attempt in 1 2 3 4 5; do
+          if git push origin "HEAD:${branch}"; then
+            echo "Pushed update-gitops commit on attempt ${attempt}"
+            exit 0
+          fi
+          echo "Push rejected, retrying with rebase (attempt ${attempt})"
+          git fetch origin "${branch}"
+          git rebase FETCH_HEAD
+        done
+        echo "Failed to push update-gitops commit after retries" >&2
+        exit 1

@@ -1,0 +1,23 @@
+# Managed Manifest
+# File: platform/gitops/apps/d7i-soap.yaml
+# Purpose: Argo CD child application defining sync source and destination for a platform component.
+# Owner: integration-hub platform team
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: d7i-soap-app
+  namespace: openshift-gitops
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/arencloud/integration-hub-service-gitops.git
+    targetRevision: main
+    path: platform/apps/d7i-soap/overlays/prod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: d7i-soap-ns
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

@@ -1,0 +1,23 @@
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Build/Temp
+target/
+build/
+bin/
+*.log
+tmp/
+temp/
+
+# Tekton/K8s/GitOps specifics (if any)
+# Usually we keep manifests, but might want to ignore some local secrets or env files
+.env
+.env.local
+secrets/*.yaml

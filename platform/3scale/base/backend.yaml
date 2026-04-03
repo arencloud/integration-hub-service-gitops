@@ -1,0 +1,17 @@
+# Managed Manifest
+# File: platform/3scale/base/backend.yaml
+# Purpose: 3scale product/back-end/API management resources used for integration API onboarding.
+# Owner: integration-hub platform team
+
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Backend
+metadata:
+  name: integration-hub-backend
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  name: integration-hub-backend
+  systemName: integration-hub-backend
+  privateBaseURL: http://integration-hub.integration-hub-ns.svc.cluster.local:8080
+  providerAccountRef:
+    name: 3scale-provider-account

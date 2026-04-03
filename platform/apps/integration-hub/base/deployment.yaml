@@ -1,0 +1,105 @@
+# Managed Manifest
+# File: platform/apps/integration-hub/base/deployment.yaml
+# Purpose: Base application manifest defining deployable workload resources.
+# Owner: integration-hub platform team
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: integration-hub
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: integration-hub
+  template:
+    metadata:
+      labels:
+        app: integration-hub
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: integration-hub
+          image: quay.io/rh-ee-egevorky/integration-hub-service:latest
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - containerPort: 8080
+          env:
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                secretKeyRef:
+                  name: integration-hub-runtime
+                  key: KAFKA_BOOTSTRAP_SERVERS
+            - name: KEYCLOAK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: integration-hub-runtime
+                  key: KEYCLOAK_URL
+            - name: KEYCLOAK_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: integration-hub-runtime
+                  key: KEYCLOAK_CLIENT_ID
+            - name: KEYCLOAK_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: integration-hub-runtime
+                  key: KEYCLOAK_CLIENT_SECRET
+            - name: OCIPI_DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: integration-hub-runtime
+                  key: OCIPI_DB_URL
+            - name: OCIPI_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: integration-hub-runtime
+                  key: OCIPI_DB_USER
+            - name: OCIPI_DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: integration-hub-runtime
+                  key: OCIPI_DB_PASS
+            - name: STATUS_DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: integration-hub-runtime
+                  key: STATUS_DB_URL
+            - name: STATUS_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: integration-hub-runtime
+                  key: STATUS_DB_USER
+            - name: STATUS_DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: integration-hub-runtime
+                  key: STATUS_DB_PASS
+            - name: EHURT_TOKEN_URL
+              valueFrom:
+                secretKeyRef:
+                  name: integration-hub-runtime
+                  key: EHURT_TOKEN_URL
+            - name: EHURT_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: integration-hub-runtime
+                  key: EHURT_CLIENT_ID
+            - name: EHURT_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: integration-hub-runtime
+                  key: EHURT_CLIENT_SECRET
+            - name: EHURT_REST_URL
+              valueFrom:
+                secretKeyRef:
+                  name: integration-hub-runtime
+                  key: EHURT_REST_URL

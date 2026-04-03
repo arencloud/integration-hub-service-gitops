@@ -1,0 +1,49 @@
+# Managed Manifest
+# File: platform/apps/ocipi-viewer/base/deployment.yaml
+# Purpose: Base application manifest defining deployable workload resources.
+# Owner: integration-hub platform team
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ocipi-viewer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ocipi-viewer
+  template:
+    metadata:
+      labels:
+        app: ocipi-viewer
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: ocipi-viewer
+          image: quay.io/rh-ee-egevorky/ocipi-service:latest
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - containerPort: 8084
+          env:
+            - name: OCIPI_DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: ocipi-viewer-runtime
+                  key: OCIPI_DB_URL
+            - name: OCIPI_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: ocipi-viewer-runtime
+                  key: OCIPI_DB_USER
+            - name: OCIPI_DB_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: ocipi-viewer-runtime
+                  key: OCIPI_DB_PASS

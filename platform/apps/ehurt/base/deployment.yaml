@@ -1,0 +1,36 @@
+# Managed Manifest
+# File: platform/apps/ehurt/base/deployment.yaml
+# Purpose: Base application manifest defining deployable workload resources.
+# Owner: integration-hub platform team
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ehurt-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ehurt-service
+  template:
+    metadata:
+      labels:
+        app: ehurt-service
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: ehurt-service
+          image: quay.io/rh-ee-egevorky/ehurt-service:latest
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - containerPort: 8083
+          env:
+            - name: EHURT_REQUIRE_BEARER
+              value: "true"

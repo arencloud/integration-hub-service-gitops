@@ -1,0 +1,55 @@
+# Managed Manifest
+# File: platform/3scale/base/integration-hub-openapi-configmap.yaml
+# Purpose: 3scale product/back-end/API management resources used for integration API onboarding.
+# Owner: integration-hub platform team
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: integration-hub-openapi
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+type: Opaque
+stringData:
+  openapi.yaml: |
+    openapi: 3.0.3
+    info:
+      title: Integration Hub API
+      version: 1.0.0
+    paths:
+      /api/integration/dispatch/{target}:
+        post:
+          summary: Dispatch message asynchronously
+          parameters:
+            - in: path
+              name: target
+              required: true
+              schema:
+                type: string
+          responses:
+            "202":
+              description: Accepted
+      /api/integration/dispatch-sync/{target}:
+        post:
+          summary: Dispatch message synchronously
+          parameters:
+            - in: path
+              name: target
+              required: true
+              schema:
+                type: string
+          responses:
+            "200":
+              description: Successful response
+      /api/integration/status/{correlationId}:
+        get:
+          summary: Query status by correlation id
+          parameters:
+            - in: path
+              name: correlationId
+              required: true
+              schema:
+                type: string
+          responses:
+            "200":
+              description: Successful response

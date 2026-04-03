@@ -1,0 +1,30 @@
+# Managed Manifest
+# File: platform/tekton/base/tasks/task-git-clone.yaml
+# Purpose: Reusable Tekton Task implementing a CI/CD step for build, test, scan, or GitOps operations.
+# Owner: integration-hub platform team
+
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: task-git-clone
+spec:
+  params:
+    - name: repo-url
+    - name: revision
+      default: main
+  workspaces:
+    - name: source
+  steps:
+    - name: cleanup
+      image: registry.access.redhat.com/ubi9/ubi-minimal:latest
+      script: |
+        set -eux
+        cd $(workspaces.source.path)
+        rm -rf repo
+    - name: clone
+      image: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel9:v1.21.1
+      command: ["/ko-app/git-init"]
+      args:
+        - "-url=$(params.repo-url)"
+        - "-revision=$(params.revision)"
+        - "-path=$(workspaces.source.path)/repo"

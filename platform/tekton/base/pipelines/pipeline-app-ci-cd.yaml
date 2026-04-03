@@ -1,0 +1,206 @@
+# Managed Manifest
+# File: platform/tekton/base/pipelines/pipeline-app-ci-cd.yaml
+# Purpose: Tekton Pipeline definition orchestrating build, scan, and GitOps update stages.
+# Owner: integration-hub platform team
+
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: app-ci-cd-pipeline
+spec:
+  params:
+    - name: repo-url
+    - name: gitops-repo-url
+      default: https://github.com/arencloud/integration-hub-service-gitops.git
+    - name: revision
+      default: main
+    - name: context-dir
+    - name: image-repo
+    - name: image-tag
+      default: ""
+    - name: app-version
+      default: ""
+    - name: kustomization-path
+    - name: scanner-type
+      default: trivy
+    - name: trivy-severity
+      default: CRITICAL
+    - name: rox-endpoint
+      default: ""
+    - name: rox-insecure-skip-tls-verify
+      default: "false"
+    - name: enable-3scale-onboarding
+      default: "false"
+  workspaces:
+    - name: source
+    - name: dockerconfig
+      optional: true
+    - name: maven-server-secret
+  tasks:
+    - name: clone
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: namespace
+            value: openshift-pipelines
+          - name: name
+            value: git-clone-1-21-0
+      params:
+        - name: URL
+          value: $(params.repo-url)
+        - name: REVISION
+          value: $(params.revision)
+        - name: SUBDIRECTORY
+          value: repo
+      workspaces:
+        - name: output
+          workspace: source
+
+    - name: prepare-maven-settings
+      runAfter: ["resolve-version"]
+      taskRef:
+        name: task-prepare-maven-settings
+      params:
+        - name: context-dir
+          value: $(params.context-dir)
+      workspaces:
+        - name: source
+          workspace: source
+        - name: maven-server-secret
+          workspace: maven-server-secret
+
+    - name: test
+      runAfter: ["prepare-maven-settings"]
+      taskRef:
+        name: task-maven-test
+      params:
+        - name: context-dir
+          value: $(params.context-dir)
+      workspaces:
+        - name: source
+          workspace: source
+
+    - name: package
+      runAfter: ["test"]
+      taskRef:
+        name: task-maven-package
+      params:
+        - name: context-dir
+          value: $(params.context-dir)
+      workspaces:
+        - name: source
+          workspace: source
+
+    - name: build-push
+      runAfter: ["package"]
+      taskRef:
+        resolver: cluster
+        params:
+          - name: kind
+            value: task
+          - name: namespace
+            value: openshift-pipelines
+          - name: name
+            value: buildah-1-21-0
+      params:
+        - name: IMAGE
+          value: $(params.image-repo):$(tasks.resolve-version.results.image-tag)
+        - name: CONTEXT
+          value: repo/$(params.context-dir)
+        - name: DOCKERFILE
+          value: repo/$(params.context-dir)/Dockerfile
+        - name: TLS_VERIFY
+          value: "true"
+      workspaces:
+        - name: source
+          workspace: source
+        - name: dockerconfig
+          workspace: dockerconfig
+
+    - name: vuln-scan-trivy
+      runAfter: ["build-push"]
+      when:
+        - input: $(params.scanner-type)
+          operator: in
+          values: ["trivy"]
+      taskRef:
+        name: task-trivy-scan
+      params:
+        - name: image-repo
+          value: $(params.image-repo)
+        - name: image-tag
+          value: $(tasks.resolve-version.results.image-tag)
+        - name: context-dir
+          value: $(params.context-dir)
+        - name: severity
+          value: $(params.trivy-severity)
+      workspaces:
+        - name: source
+          workspace: source
+
+    - name: vuln-scan-acs
+      runAfter: ["build-push"]
+      when:
+        - input: $(params.scanner-type)
+          operator: in
+          values: ["acs"]
+      taskRef:
+        name: task-acs-scan
+      params:
+        - name: image-repo
+          value: $(params.image-repo)
+        - name: image-tag
+          value: $(tasks.resolve-version.results.image-tag)
+        - name: rox-endpoint
+          value: $(params.rox-endpoint)
+        - name: insecure-skip-tls-verify
+          value: $(params.rox-insecure-skip-tls-verify)
+
+    - name: update-gitops
+      runAfter: ["vuln-scan-trivy", "vuln-scan-acs"]
+      taskRef:
+        name: task-update-kustomize-image
+      params:
+        - name: repo-url
+          value: $(params.gitops-repo-url)
+        - name: context-dir
+          value: $(params.context-dir)
+        - name: image-repo
+          value: $(params.image-repo)
+        - name: image-tag
+          value: $(tasks.resolve-version.results.image-tag)
+        - name: revision
+          value: $(params.revision)
+        - name: kustomization-path
+          value: $(params.kustomization-path)
+      workspaces:
+        - name: source
+          workspace: source
+
+    - name: 3scale-onboarding
+      runAfter: ["update-gitops"]
+      when:
+        - input: $(params.enable-3scale-onboarding)
+          operator: in
+          values: ["true"]
+      taskRef:
+        name: task-3scale-onboard
+      workspaces:
+        - name: source
+          workspace: source
+    - name: resolve-version
+      runAfter: ["clone"]
+      taskRef:
+        name: task-resolve-app-version
+      params:
+        - name: context-dir
+          value: $(params.context-dir)
+        - name: image-tag
+          value: $(params.image-tag)
+        - name: app-version
+          value: $(params.app-version)
+      workspaces:
+        - name: source
+          workspace: source

@@ -1,0 +1,41 @@
+# Managed Manifest
+# File: platform/apps/camel-integration/base/integration.yaml
+# Purpose: Base application manifest defining deployable workload resources.
+# Owner: integration-hub platform team
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: camel-integration-onboarding
+  labels:
+    app.kubernetes.io/part-of: integration-hub-demo
+data:
+  README: |
+    Camel K operator is not detected in this cluster.
+    This placeholder keeps GitOps healthy and documents the onboarding flow.
+
+    To deploy a Kaoto/Camel K integration when operator is available:
+      1) Apply your Integration CR in camel-integration-ns.
+      2) Replace this ConfigMap with a camel.apache.org/v1 Integration manifest.
+      3) Keep the manifest in Git for GitOps reconciliation.
+  sample.integration.yaml: |
+    apiVersion: camel.apache.org/v1
+    kind: Integration
+    metadata:
+      name: kafka-to-status-kaoto
+    spec:
+      traits:
+        owner:
+          enabled: false
+      flows:
+        - from:
+            uri: "kafka:{{kafka.topic.consumer3}}"
+            parameters:
+              brokers: "{{kafka.bootstrap-servers}}"
+              groupId: "camelk-ehurt-consumer"
+            steps:
+              - setHeader:
+                  name: correlationId
+                  simple: "${header[kafka.KEY]}"
+              - to: "https://ehurt-service.ehurt-ns.svc.cluster.local:8083/api/process"
+              - to: "https://integration-hub.integration-hub-ns.svc.cluster.local:8080/api/integration/route-status"

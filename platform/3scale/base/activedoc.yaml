@@ -1,0 +1,20 @@
+# Managed Manifest
+# File: platform/3scale/base/activedoc.yaml
+# Purpose: 3scale product/back-end/API management resources used for integration API onboarding.
+# Owner: integration-hub platform team
+
+apiVersion: capabilities.3scale.net/v1beta1
+kind: ActiveDoc
+metadata:
+  name: integration-hub-openapi
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  name: integration-hub-openapi
+  systemName: integrationhubopenapi
+  providerAccountRef:
+    name: 3scale-provider-account
+  productSystemName: integration-hub-product
+  activeDocOpenAPIRef:
+    secretRef:
+      name: integration-hub-openapi

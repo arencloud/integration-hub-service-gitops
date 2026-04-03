@@ -1,0 +1,16 @@
+# Managed Manifest
+# File: platform/apps/d7i-soap/base/service.yaml
+# Purpose: Base application manifest defining deployable workload resources.
+# Owner: integration-hub platform team
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: d7i-soap-service
+spec:
+  selector:
+    app: d7i-soap-service
+  ports:
+    - port: 8082
+      targetPort: 8082
+      name: http

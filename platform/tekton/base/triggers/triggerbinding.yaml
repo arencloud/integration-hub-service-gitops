@@ -1,0 +1,109 @@
+# Managed Manifest
+# File: platform/tekton/base/triggers/triggerbinding.yaml
+# Purpose: Tekton Triggers configuration mapping webhook events to parameterized PipelineRuns.
+# Owner: integration-hub platform team
+
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: app-ci-cd-binding
+spec:
+  params:
+    - name: gitrevision
+      value: $(body.ref)
+    - name: gitrepositoryurl
+      value: $(body.repository.clone_url)
+    - name: gitops-repo-url
+      value: "https://github.com/arencloud/integration-hub-service-gitops.git"
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: app-ci-cd-static-binding-integration-hub
+spec:
+  params:
+    - name: context-dir
+      value: "apps/integration-hub-service"
+    - name: image-repo
+      value: "quay.io/rh-ee-egevorky/integration-hub-service"
+    - name: image-tag
+      value: ""
+    - name: app-version
+      value: ""
+    - name: kustomization-path
+      value: "platform/apps/integration-hub/overlays/prod"
+    - name: scanner-type
+      value: "trivy"
+    - name: trivy-severity
+      value: "CRITICAL"
+    - name: enable-3scale-onboarding
+      value: "true"
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: app-ci-cd-static-binding-d7i
+spec:
+  params:
+    - name: context-dir
+      value: "demo-systems/d7i-soap-service"
+    - name: image-repo
+      value: "quay.io/rh-ee-egevorky/d7i-soap-service"
+    - name: image-tag
+      value: ""
+    - name: app-version
+      value: ""
+    - name: kustomization-path
+      value: "platform/apps/d7i-soap/overlays/prod"
+    - name: scanner-type
+      value: "trivy"
+    - name: trivy-severity
+      value: "CRITICAL"
+    - name: enable-3scale-onboarding
+      value: "false"
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: app-ci-cd-static-binding-ehurt
+spec:
+  params:
+    - name: context-dir
+      value: "demo-systems/ehurt-service"
+    - name: image-repo
+      value: "quay.io/rh-ee-egevorky/ehurt-service"
+    - name: image-tag
+      value: ""
+    - name: app-version
+      value: ""
+    - name: kustomization-path
+      value: "platform/apps/ehurt/overlays/prod"
+    - name: scanner-type
+      value: "trivy"
+    - name: trivy-severity
+      value: "CRITICAL"
+    - name: enable-3scale-onboarding
+      value: "false"
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: app-ci-cd-static-binding-ocipi
+spec:
+  params:
+    - name: context-dir
+      value: "demo-systems/ocipi-service"
+    - name: image-repo
+      value: "quay.io/rh-ee-egevorky/ocipi-service"
+    - name: image-tag
+      value: ""
+    - name: app-version
+      value: ""
+    - name: kustomization-path
+      value: "platform/apps/ocipi-viewer/overlays/prod"
+    - name: scanner-type
+      value: "trivy"
+    - name: trivy-severity
+      value: "CRITICAL"
+    - name: enable-3scale-onboarding
+      value: "false"

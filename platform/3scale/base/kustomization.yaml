@@ -1,0 +1,12 @@
+# Managed Manifest
+# File: platform/3scale/base/kustomization.yaml
+# Purpose: 3scale product/back-end/API management resources used for integration API onboarding.
+# Owner: integration-hub platform team
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - integration-hub-openapi-configmap.yaml
+  - backend.yaml
+  - product.yaml
+  - activedoc.yaml

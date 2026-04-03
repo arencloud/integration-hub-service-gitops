@@ -1,0 +1,17 @@
+# Managed Manifest
+# File: platform/apps/d7i-soap/base/route.yaml
+# Purpose: Base application manifest defining deployable workload resources.
+# Owner: integration-hub platform team
+
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: d7i-soap-service
+spec:
+  to:
+    kind: Service
+    name: d7i-soap-service
+  port:
+    targetPort: http
+  tls:
+    termination: edge

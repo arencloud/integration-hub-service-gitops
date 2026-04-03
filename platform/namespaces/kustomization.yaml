@@ -1,0 +1,21 @@
+# Managed Manifest
+# File: platform/namespaces/kustomization.yaml
+# Purpose: Namespace and access bootstrap resources for workload and platform segregation.
+# Owner: integration-hub platform team
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ns-integration-hub.yaml
+  - ns-d7i-soap.yaml
+  - ns-ehurt.yaml
+  - ns-ocipi-viewer.yaml
+  - ns-camel-integration.yaml
+  - ns-ci.yaml
+  - ns-gitops.yaml
+  - rb-argocd-integration-hub.yaml
+  - rb-argocd-d7i-soap.yaml
+  - rb-argocd-ehurt.yaml
+  - rb-argocd-ocipi-viewer.yaml
+  - rb-argocd-camel-integration.yaml
+  - rb-argocd-ci.yaml

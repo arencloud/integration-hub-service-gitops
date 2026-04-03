@@ -1,0 +1,17 @@
+# Managed Manifest
+# File: platform/apps/integration-hub/base/service.yaml
+# Purpose: Base application manifest defining deployable workload resources.
+# Owner: integration-hub platform team
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: integration-hub
+spec:
+  selector:
+    app: integration-hub
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: http

@@ -1,0 +1,16 @@
+# Managed Manifest
+# File: platform/tekton/base/rbac/role.yaml
+# Purpose: RBAC policy granting minimum required permissions to Tekton service accounts and triggers.
+# Owner: integration-hub platform team
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: app-ci-role
+rules:
+  - apiGroups: [""]
+    resources: ["secrets", "configmaps"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["tekton.dev"]
+    resources: ["pipelineruns", "taskruns"]
+    verbs: ["get", "list", "watch", "create"]
