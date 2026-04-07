@@ -14,6 +14,17 @@ spec:
   systemName: integration-hub-product
   providerAccountRef:
     name: 3scale-provider-account
+  # Keep at least one explicit plan in desired state.
+  # Without this, the operator may try to delete existing plans and fail when
+  # subscriptions already depend on them, which keeps the Product degraded.
+  applicationPlans:
+    default:
+      name: default
+      published: false
+      appsRequireApproval: false
+      setupFee: "0"
+      costMonth: "0"
+      trialPeriod: 0
   deployment:
     apicastHosted:
       authentication:

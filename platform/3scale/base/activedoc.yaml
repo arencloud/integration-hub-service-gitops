@@ -14,7 +14,6 @@ spec:
   systemName: integrationhubopenapi
   providerAccountRef:
     name: 3scale-provider-account
-  productSystemName: integration-hub-product
   activeDocOpenAPIRef:
     secretRef:
       name: integration-hub-openapi
